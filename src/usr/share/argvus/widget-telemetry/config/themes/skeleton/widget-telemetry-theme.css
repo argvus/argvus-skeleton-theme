@@ -1,0 +1,9 @@
+/* theme: skeleton */
+@define-color th-background #808080;
+@define-color th-header #808080;
+@define-color th-foreground #808080;
+@define-color th-window-bg     #808080;
+@define-color th-window-bg-rgba rgba(128, 128, 128, 0.92);
+@define-color th-border rgba(128, 128, 128, 0.85);
+@define-color th-border-header rgba(128, 128, 128, 0.35);
+@define-color th-disconnected rgba(128, 128, 128, 0.45);

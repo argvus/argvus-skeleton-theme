@@ -1,0 +1,11 @@
+# theme: skeleton
+highlight = "#808080"
+frame_color = "#808080"
+low_background = "#808080"
+low_foreground = "#808080"
+normal_background = "#808080"
+normal_foreground = "#808080"
+critical_background = "#808080"
+critical_foreground = "#808080"
+app_background = "#808080"
+app_foreground = "#808080"

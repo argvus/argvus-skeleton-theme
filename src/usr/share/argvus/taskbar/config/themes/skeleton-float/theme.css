@@ -1,0 +1,21 @@
+/* theme: skeleton-float */
+@define-color th-foreground #808080;
+@define-color th-foreground2 #808080;
+@define-color th-decorate #808080;
+@define-color th-decorate-rgba rgba(128, 128, 128, 0.18);
+@define-color th-hover #808080;
+@define-color th-background #808080;
+@define-color th-background-rgba rgba(128, 128, 128, 1);
+@define-color th-right1-bg #808080;
+@define-color th-right02-bg #808080;
+@define-color th-border-rights rgba(128, 128, 128, 1);
+@define-color th-window-fg #808080;
+@define-color th-danger #808080;
+@define-color th-warn #808080;
+@define-color th-ok #808080;
+@define-color th-recording #808080;
+@define-color th-recording-pause #808080;
+@define-color th-power #808080;
+@define-color th-mpris-bg rgba(128, 128, 128, 1);
+@define-color th-mpris-border rgba(128, 128, 128, 0.70);
+@define-color th-mpris-fg-anim #808080;

@@ -1,0 +1,275 @@
+# Development
+
+Guide for developers who want to create, install, build and publish a theme
+package from this template (part of the [ARGVUS](https://github.com/argvus)
+organization).
+
+## Project layout
+
+```text
+packaging/
+  arch/
+    ci/        PKGBUILD used by GitHub Actions (release built from a tag)
+    local/     PKGBUILD used for local builds (from the working tree)
+    common/    functions.sh: shared source-tree normalization for both PKGBUILDs
+src/           theme payload, installed into / (every file keeps its path
+               relative to /, e.g. src/etc/... -> /etc/...)
+  etc/argvus/taskbar/calendar/themes/      taskbar calendar theme CSS
+  usr/share/argvus/appearance/themes.d/    theme.toml metadata
+  usr/share/argvus/...                     per-component theme files
+tools/
+  sh/
+    pkgbuild_local.sh   creates the local archive and runs makepkg
+    validate.sh         required repository and metadata checks
+    new_theme.sh        turns this template into a new theme package
+build/         build outputs (git-ignored)
+  artifacts/   source .tar.gz + src/ + pkg/ (kept for inspection)
+  dist/        final .pkg.tar.zst (ready to install / publish)
+.github/workflows/
+  ci.yml       validates PKGBUILDs (push/PR)
+  release.yml  build + signing + publish to argvus/packages (tags v*)
+```
+
+Everything installed under `/` lives inside `src/`. The repository has no
+top-level `etc/` or `usr/` directories and no `PKGBUILD` in its root.
+
+## Creating a new theme
+
+1. Copy the template to a new working directory (`<template>` is this
+   repository's directory, `<new-dir>` the theme repository to create):
+
+   ```sh
+   cp -a <template> <new-dir>
+   cd <new-dir>
+   ```
+
+2. Generate the theme. The slug is lowercase, uses single hyphens, and becomes
+   the theme ID and the package suffix (`argvus-theme-<slug>`):
+
+   ```sh
+   tools/sh/new_theme.sh nord-light "Nord Light"
+   ```
+
+   The generator:
+
+   - replaces the template repository name with `<slug>-theme` (`url`);
+   - replaces `Skeleton` with the display name;
+   - replaces `skeleton` with the slug in every text file, including
+     `packaging/`, `README.md`, `DEVELOPMENT.md` and `src/`;
+   - renames the theme files under `src/` (for example
+     `skeleton-float.css` becomes `nord-light-float.css`);
+   - resets `pkgver` to `0.1.0` and `CHANGELOG.md` to its initial state.
+
+   It fails with a clear message when the repository has already been
+   generated, because no `skeleton` identifier is left to replace.
+
+3. Fill the palette. Every color in `src/` is a neutral placeholder (`#808080`,
+   alpha preserved). Replace them with the official palette, keeping each
+   file's syntax. The places that need a value are marked with
+   `TODO(palette)`:
+
+   ```sh
+   grep -rn 'TODO(palette)' src/
+   ```
+
+   The theme ID (`id` in `theme.toml`) and the `wallpaper` path also need a
+   real value: the template points to a wallpaper that does not exist yet.
+
+4. Update the repository metadata that the generator cannot infer, such as
+   the maintainer line in both PKGBUILDs and `AUTHORS.md`.
+
+5. Validate and build:
+
+   ```sh
+   make validate
+   make build
+   ```
+
+## Local build
+
+```sh
+make build
+```
+
+What happens:
+
+1. The script creates `build/artifacts/<pkgname>-<pkgver>.tar.gz` from the
+   working tree (excludes `.git`, `tools/`, `build/` and old artifacts).
+2. The `sha256` of that archive is computed and injected into a copy of the
+   temporary PKGBUILD copy in `packaging/arch/local/` (discarded when done) —
+   `sha256sums` never uses `SKIP`.
+3. `makepkg` runs with `BUILDDIR`/`SRCDEST` pointed at `build/artifacts` and
+   `PKGDEST` at `build/dist`, validating the checksum ("Passed").
+
+Result for the template:
+
+```text
+build/dist/argvus-theme-skeleton-0.1.0-1-any.pkg.tar.zst   # ready-to-use package
+build/artifacts/...                                        # source tar.gz + src/ + pkg/
+```
+
+Install the locally built package:
+
+```sh
+make install
+```
+
+Clean build outputs:
+
+```sh
+make clean
+```
+
+## Validation
+
+```sh
+make validate   # shellcheck, PKGBUILD parsing, and whitespace checks
+make lint       # local static checks (shell scripts under tools/ and src/)
+make spellcheck # optional local cspell check
+```
+
+`make lint` and `make validate` check the shell scripts in `src/` only when
+the theme ships any; a theme without payload scripts passes these checks.
+
+`ci.yml` runs `make validate`, builds the local package as an unprivileged
+packager, runs `namcap` on the resulting package, and performs a cspell
+spellcheck (config in `cspell.json`, dictionary in `.cspell/`).
+
+## Checksums, signing and validation
+
+- There is no `SKIP`: `sha256sums` is always a real digest, computed at build
+  time (local) or via `updpkgsums` (release CI).
+- Releases are GPG-signed (package `.sig`, `argvus.db.tar.gz`,
+  `argvus.files.tar.gz`, `argvus.db`, `argvus.files`).
+- Keep `sha256sums=()` **empty** in the repository (no `SKIP` in the PKGBUILD
+  line): the real value is generated by the build.
+
+## Prepare the GPG key
+
+Generate a dedicated key (e.g. for `argvus/packages`):
+
+```sh
+gpg --full-generate-key            # RSA 4096, no expiry recommended
+gpg --list-secret-keys --with-colons | grep ^sec:   # note the KEY_ID
+```
+
+Export the private key in ASCII-armored form (this is what the workflow
+imports):
+
+```sh
+gpg --armor --export-secret-keys KEY_ID
+```
+
+## Configure the GitHub secrets
+
+In **Settings → Secrets and variables → Actions** of the repository:
+
+| Secret | Value |
+| --- | --- |
+| `GPG_PRIVATE_KEY` | output of `gpg --armor --export-secret-keys KEY_ID` (full PEM block) |
+| `GPG_PASSPHRASE` | passphrase of the key (if it has one) |
+| `PACKAGES_REPO_TOKEN` | PAT with `contents:write` scope on the `argvus/packages` repo |
+
+If the key has no passphrase, leave `GPG_PASSPHRASE` empty (the workflow
+signs without it).
+
+## Publish a release
+
+1. Check that `url` in `packaging/arch/ci/PKGBUILD` points to the theme
+   repository (`https://github.com/argvus/<slug>-theme` for a generated theme).
+   The release source is the GitHub tag archive
+   `${url}/archive/refs/tags/v${pkgver}.tar.gz`; `prepare()` normalizes the
+   GitHub top-level directory before packaging. Without `url`, the release
+   **fails on purpose** in GitHub Actions with a clear message.
+2. Check versions/metadata in `packaging/arch/local/PKGBUILD` and
+   `packaging/arch/ci/PKGBUILD`.
+3. Generate and commit the changelog (see
+   [Changelog](#changelog-changelogmd)).
+4. Create and push the tag:
+
+   ```sh
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+   The release workflow can also be started manually by selecting an existing
+   `v*` tag as its `tag` input. This is useful for a controlled rebuild.
+
+5. `release.yml` runs: `updpkgsums` (validates the source) → `makepkg`
+   (produces the `.zst`) → GPG signing → `actions/upload-artifact` →
+   `repo-add` → commit/push in `argvus/packages` (`public/arch/x86_64`).
+
+## Changelog (`CHANGELOG.md`)
+
+`CHANGELOG.md` is generated from the git history
+([Conventional Commits](CONTRIBUTING.md#development-flow)) with
+[git-cliff](https://git-cliff.org):
+
+```sh
+make changelog    # = git-cliff -o CHANGELOG.md
+```
+
+Run it **before tagging a release**:
+
+```sh
+# 1. commit conventional commits on main (feat:, fix:, docs:, ...)
+
+# 2. generate the changelog up to the pending commits
+make changelog
+
+# 3. commit the regenerated CHANGELOG.md
+git add CHANGELOG.md
+git commit -m "docs(changelog): update for v0.1.0"
+
+# 4. create and push the tag (triggers release.yml)
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+How it behaves:
+
+- `git-cliff` builds the `[Unreleased]` section from commits **since the last
+  tag**. With no tags yet, everything lands under `[Unreleased]`.
+- If you generate **after** tagging, the new commits are already attributed to
+  the version; the dated entry only settles on the next run. Generating before
+  tagging keeps the flow clean: `[Unreleased]` → commit → tag → next cycle the
+  section becomes `[0.1.0] - <date>` automatically.
+
+Useful tools:
+
+```sh
+git-cliff --unreleased --strip header   # preview only the pending changes
+git-cliff --bump                        # suggest the next version (semver)
+```
+
+> The changelog is generated from the git history, so a freshly initialized
+> repository needs at least one commit before the first `make changelog`
+> (an unborn `HEAD` makes git-cliff fail with
+> `reference 'refs/heads/main' not found`).
+
+## Local checks before committing
+
+```sh
+make validate
+make build
+```
+
+Optionally regenerate the changelog with `make changelog` (requires
+`git-cliff`).
+
+## Troubleshooting
+
+- **`sudo` inside `make install` during the build**: the `package()` of the
+  PKGBUILDs installs files directly (`install -Dm755 ...`), without depending
+  on the Makefile `install` target. If an old build shows this error again,
+  make sure `package()` does not call `make install`.
+- **`libfakeroot.so ... LD_PRELOAD`**: usually follows the `sudo` error
+  above; it goes away after the previous step.
+- **Release fails at "Retrieving sources"**: empty `url`, a missing `v*` tag,
+  or an archive URL format that does not match the host — see the release
+  section.
+- **`new_theme.sh` says the repository is already initialized**: the template
+  identifiers were already replaced. Start again from a fresh copy of the
+  template.
+
+See also [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow.

@@ -1,0 +1,18 @@
+# ARGVUS Skeleton Float
+[app]
+overall = { bg = "#808080" }
+[mgr]
+cwd = { fg = "#808080", bold = true }
+find_keyword = { fg = "#808080", reversed = true }
+marker_copied = { fg = "#808080", bg = "#808080" }
+marker_cut = { fg = "#808080", bg = "#808080" }
+marker_marked = { fg = "#808080", bg = "#808080" }
+marker_selected = { fg = "#808080", bg = "#808080" }
+border_style = { fg = "#808080" }
+[indicator]
+current = { fg = "#808080", bg = "#808080" }
+[tabs]
+active = { fg = "#808080", bg = "#808080", bold = true }
+inactive = { fg = "#808080", bg = "#808080" }
+[status]
+overall = { fg = "#808080" }

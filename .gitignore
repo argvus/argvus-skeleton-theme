@@ -1,0 +1,16 @@
+.DS_Store
+/tmp
+/build
+TODO.txt
+*.pkg.tar.*
+*.src.tar.*
+*.tar.gz
+*.sig
+.release/
+packages-repo/
+packaging/arch/ci/src/
+packaging/arch/ci/pkg/
+packaging/arch/local/src/
+packaging/arch/local/pkg/
+packaging/arch/local/PKGBUILD.local
+packaging/arch/*/.PKGBUILD.local.*

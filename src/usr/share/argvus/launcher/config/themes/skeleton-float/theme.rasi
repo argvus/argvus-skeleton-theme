@@ -1,0 +1,10 @@
+/* theme: skeleton-float */
+* {
+    th-bg: rgba(128, 128, 128, 96%);
+    th-fg: rgb(128, 128, 128);
+    th-fg-selected: rgba(128, 128, 128, 100%);
+    th-row-alt: rgba(128, 128, 128, 35%);
+    th-row-selected: rgba(128, 128, 128, 96%);
+    th-border-color: rgba(128, 128, 128, 0.85);
+    th-separator: rgba(128, 128, 128, 0.65);
+}
