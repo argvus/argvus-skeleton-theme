@@ -63,7 +63,7 @@ top-level `etc/` or `usr/` directories and no `PKGBUILD` in its root.
    It fails with a clear message when the repository has already been
    generated, because no `skeleton` identifier is left to replace.
 
-3. Fill the palette. Every color in `src/` is a neutral placeholder (`#808080`,
+3. Fill the palette. The colors in `src/` are neutral placeholders (`#808080`,
    alpha preserved). Replace them with the official palette, keeping each
    file's syntax. The places that need a value are marked with
    `TODO(palette)`:
@@ -72,8 +72,18 @@ top-level `etc/` or `usr/` directories and no `PKGBUILD` in its root.
    grep -rn 'TODO(palette)' src/
    ```
 
-   The theme ID (`id` in `theme.toml`) and the `wallpaper` path also need a
-   real value: the template points to a wallpaper that does not exist yet.
+   Also update the `qt6ct` color files in `src/usr/share/argvus/appearance/config/qt6ct/colors/`:
+   they use the same palette and the Qt role order (`#AARRGGBB`), and must match
+   `[palette]` in `theme.toml`.
+
+   The `-float` files are the base file plus geometry-only changes (radius,
+   gaps, margins, rounding). Do not give them their own palette or a shorter
+   body: the Float mode must keep every key of the base mode.
+
+   The `wallpaper` in `theme.toml` must be a file under
+   `src/usr/share/backgrounds/argvus/`. `make validate` fails until it exists,
+   because a theme without its wallpaper silently skips the wallpaper step.
+   The same check applies to `calendar_css`.
 
 4. Update the repository metadata that the generator cannot infer, such as
    the maintainer line in both PKGBUILDs and `AUTHORS.md`.

@@ -47,8 +47,8 @@ has_template_names() {
 }
 
 has_template_content() {
-	grep -rIqi --exclude-dir=.git --exclude-dir=build \
-		--exclude="$SELF_NAME" skeleton "$ROOT_DIR"
+	grep -rIqiE --exclude-dir=.git --exclude-dir=build \
+		--exclude="$SELF_NAME" 'skeleton|<ORG>|<REPO>|<PKGNAME>' "$ROOT_DIR"
 }
 
 [[ $# -eq 2 ]] || usage
@@ -81,11 +81,13 @@ done < <(find src -depth -iname '*skeleton*' -print0)
 while IFS= read -r -d '' file; do
 	[[ "${file#./}" == "$SELF_NAME" ]] && continue
 	[[ "${file#./}" == "tools/sh/$SELF_NAME" ]] && continue
-	grep -Iqi skeleton -- "$file" || continue
+	grep -IqiE 'skeleton|<ORG>|<REPO>|<PKGNAME>' -- "$file" || continue
 	rewrite_file "$file" \
 		-e "s|skeleton-theme|${slug_sed}-theme|g" \
 		-e "s|Skeleton|${display_sed}|g" \
-		-e "s|skeleton|${slug_sed}|g"
+		-e "s|skeleton|${slug_sed}|g" \
+		-e "s|<ORG>/<REPO>|argvus/${slug_sed}-theme|g" \
+		-e "s|<PKGNAME>|argvus-theme-${slug_sed}|g"
 done < <(find . \( -name .git -o -name build \) -prune -o -type f -print0)
 
 for pkgbuild in packaging/arch/ci/PKGBUILD packaging/arch/local/PKGBUILD; do
@@ -105,5 +107,7 @@ EOF
 
 printf 'Theme "%s" (%s) created from the skeleton template.\n' "$display" "$slug"
 printf 'Next steps:\n'
-printf '  1. Fill the TODO(palette) placeholders in src/.\n'
-printf '  2. make validate && make build\n'
+printf '  1. Ship the wallpaper named in themes.d/%s/theme.toml under\n' "$slug"
+printf '     src/usr/share/backgrounds/argvus/ (validation fails until it exists).\n'
+printf '  2. Fill the TODO(palette) placeholders in src/ and the qt6ct colors.\n'
+printf '  3. make validate && make build\n'

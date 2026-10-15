@@ -1,10 +1,3 @@
-<!--
-
-  Replace the placeholders below (<ORG>, <REPO>, <PKGNAME>) with the real
-  values when creating a project from this packaging template.
-
--->
-
 # Security Policy
 
 ## Supported Versions

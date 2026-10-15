@@ -56,5 +56,27 @@ for pkgbuild_dir in packaging/arch/ci packaging/arch/local; do
 	)
 done
 
+# A theme manifest names resources that the package must ship. Missing ones are
+# silently skipped at runtime (no wallpaper, no calendar stylesheet), so catch
+# them here instead.
+for manifest in src/usr/share/argvus/appearance/themes.d/*/theme.toml; do
+	[[ -f "$manifest" ]] || die "no theme manifest under src/usr/share/argvus/appearance/themes.d/"
+	theme_dir="$(basename -- "$(dirname -- "$manifest")")"
+	manifest_id="$(sed -n 's/^id = "\(.*\)"$/\1/p' "$manifest" | head -n 1)"
+	[[ "$manifest_id" == "$theme_dir" ]] || die "$manifest: id '$manifest_id' does not match its directory"
+
+	wallpaper="$(sed -n 's/^wallpaper = "\([^"]*\)".*/\1/p' "$manifest" | head -n 1)"
+	if [[ -n "$wallpaper" ]]; then
+		[[ -f "src/usr/share/backgrounds/argvus/$wallpaper" ]] || die \
+			"$manifest: wallpaper '$wallpaper' is not in src/usr/share/backgrounds/argvus/ (ship it or fix the path)"
+	fi
+
+	calendar_css="$(sed -n 's/^calendar_css = "\([^"]*\)".*/\1/p' "$manifest" | head -n 1)"
+	if [[ -n "$calendar_css" ]]; then
+		[[ -f "src/etc/argvus/taskbar/calendar/themes/$calendar_css.css" ]] || die \
+			"$manifest: calendar stylesheet '$calendar_css.css' is not under src/etc/argvus/taskbar/calendar/themes/"
+	fi
+done
+
 git diff --check
 printf 'Validation OK\n'
