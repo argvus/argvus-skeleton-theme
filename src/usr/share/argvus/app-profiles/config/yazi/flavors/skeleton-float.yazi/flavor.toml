@@ -1,4 +1,4 @@
-# ARGVUS Skeleton Float
+# ARGVUS Skeleton
 [app]
 overall = { bg = "#808080" }
 [mgr]
@@ -16,3 +16,17 @@ active = { fg = "#808080", bg = "#808080", bold = true }
 inactive = { fg = "#808080", bg = "#808080" }
 [status]
 overall = { fg = "#808080" }
+[which]
+mask = { bg = "#808080" }
+cand = { fg = "#808080", bold = true }
+desc = { fg = "#808080" }
+[confirm]
+border = { fg = "#808080" }
+title = { fg = "#808080", bold = true }
+body = { fg = "#808080", bold = true }
+btn_yes = { fg = "#808080", bg = "#808080", bold = true }
+btn_no = { fg = "#808080", bg = "#808080" }
+[help]
+on = { fg = "#808080" }
+desc = { fg = "#808080", italic = true }
+footer = { fg = "#808080", bg = "#808080", bold = true }
