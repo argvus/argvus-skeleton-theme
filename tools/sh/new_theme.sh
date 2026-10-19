@@ -41,14 +41,16 @@ rewrite_file() {
 	rm -f -- "$tmp"
 }
 
+# The shared-file sync script and its .skeleton/ state keep the word on purpose.
 has_template_names() {
-	[[ -n "$(find "$ROOT_DIR" \( -name .git -o -name build \) -prune \
-		-o -iname '*skeleton*' -print -quit)" ]]
+	[[ -n "$(find "$ROOT_DIR" \( -name .git -o -name build -o -name .skeleton \) -prune \
+		-o -iname '*skeleton*' ! -name sync-skeleton.sh -print -quit)" ]]
 }
 
 has_template_content() {
-	grep -rIqiE --exclude-dir=.git --exclude-dir=build \
-		--exclude="$SELF_NAME" 'skeleton|<ORG>|<REPO>|<PKGNAME>' "$ROOT_DIR"
+	grep -rIqE --exclude-dir=.git --exclude-dir=build --exclude-dir=.skeleton \
+		--exclude=sync-skeleton.sh --exclude="$SELF_NAME" \
+		'skeleton|<ORG>|<REPO>|<PKGNAME>' "$ROOT_DIR"
 }
 
 [[ $# -eq 2 ]] || usage
@@ -81,7 +83,9 @@ done < <(find src -depth -iname '*skeleton*' -print0)
 while IFS= read -r -d '' file; do
 	[[ "${file#./}" == "$SELF_NAME" ]] && continue
 	[[ "${file#./}" == "tools/sh/$SELF_NAME" ]] && continue
-	grep -IqiE 'skeleton|<ORG>|<REPO>|<PKGNAME>' -- "$file" || continue
+	[[ "${file#./}" == "tools/sh/sync-skeleton.sh" ]] && continue
+	[[ "${file#./}" == .skeleton/* ]] && continue
+	grep -IqE 'skeleton|<ORG>|<REPO>|<PKGNAME>' -- "$file" || continue
 	rewrite_file "$file" \
 		-e "s|skeleton-theme|${slug_sed}-theme|g" \
 		-e "s|Skeleton|${display_sed}|g" \

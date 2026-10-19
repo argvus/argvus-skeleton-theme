@@ -55,6 +55,13 @@ makepkg -p packaging/arch/ci/PKGBUILD --printsrcinfo
 See [packaging/arch/README.md](packaging/arch/README.md) for the difference
 between local and release builds.
 
+## Desktop package model
+
+A theme depends on `argvus` (the master package) and on `argvus-appearance`. Installing
+the theme brings in the desktop, so no install order is required. A theme ships only
+its own resources. Do not ship configuration for a component that was removed, such as
+`snappy-switcher`.
+
 ## Documentation
 
 - [DEVELOPMENT.md](DEVELOPMENT.md) — layout, checks, theme generation and releases

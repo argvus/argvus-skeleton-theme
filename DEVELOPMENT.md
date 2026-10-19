@@ -95,6 +95,13 @@ top-level `etc/` or `usr/` directories and no `PKGBUILD` in its root.
    make build
    ```
 
+## Desktop package model
+
+A theme depends on `argvus` (the master package) and on `argvus-appearance`. Installing
+the theme brings in the desktop, so no install order is required. A theme ships only
+its own resources. Do not ship configuration for a component that was removed, such as
+`snappy-switcher`.
+
 ## Local build
 
 ```sh

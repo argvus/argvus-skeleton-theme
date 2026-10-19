@@ -36,8 +36,9 @@ background = "#808080"
 calendar_css = "skeleton"
 
 # Removable devices stylesheet name. Resolved by theme-switch.sh against the
-# argvus-removable-devices package, which ships argvus-light.css and
-# argvus-dark.css. Use a shipped name here unless this package ships its own.
+# argvus package, which ships argvus-light.css and argvus-dark.css under
+# /usr/share/argvus/removable-devices/config/themes. Use a shipped name here
+# unless this package ships its own.
 removable_devices_css = "argvus-light"
 
 [aliases]

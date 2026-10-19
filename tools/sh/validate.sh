@@ -47,6 +47,19 @@ local_metadata="$(metadata packaging/arch/local/PKGBUILD)"
 [[ "$ci_metadata" == "$local_metadata" ]] || die \
 	"CI and local PKGBUILD metadata is out of sync"
 
+# argvus is the master package: every component, theme included, depends on it.
+# Line 7 of the metadata is the depends array.
+depends_line="$(printf '%s\n' "$ci_metadata" | sed -n 7p)"
+case " $depends_line " in
+	*" argvus "*) ;;
+	*) die "packaging/arch/ci/PKGBUILD must depend on argvus (the master package)" ;;
+esac
+
+# Removed components must not ship configuration. snappy-switcher was removed.
+if find src -iname '*snappy*' -print -quit | grep -q .; then
+	die "src/ ships snappy-switcher files, a removed component"
+fi
+
 for pkgbuild_dir in packaging/arch/ci packaging/arch/local; do
 	pkgbuild="$pkgbuild_dir/PKGBUILD"
 	[[ -f "$pkgbuild" ]] || die "missing $pkgbuild"
@@ -66,7 +79,11 @@ for manifest in src/usr/share/argvus/appearance/themes.d/*/theme.toml; do
 	[[ "$manifest_id" == "$theme_dir" ]] || die "$manifest: id '$manifest_id' does not match its directory"
 
 	wallpaper="$(sed -n 's/^wallpaper = "\([^"]*\)".*/\1/p' "$manifest" | head -n 1)"
-	if [[ -n "$wallpaper" ]]; then
+	# The template ships no wallpaper; new_theme.sh renames the theme and the
+	# wallpaper must then exist, so only the generated theme is checked here.
+	if [[ "$manifest_id" == skeleton ]]; then
+		printf 'note: %s is the template; the wallpaper is checked after new_theme.sh\n' "$manifest"
+	elif [[ -n "$wallpaper" ]]; then
 		[[ -f "src/usr/share/backgrounds/argvus/$wallpaper" ]] || die \
 			"$manifest: wallpaper '$wallpaper' is not in src/usr/share/backgrounds/argvus/ (ship it or fix the path)"
 	fi
